@@ -1,0 +1,22 @@
+apiVersion: "serving.kserve.io/v1alpha1"
+kind: ClusterStorageContainer
+metadata:
+  name: mr-initializer
+spec:
+  container:
+    name: storage-initializer
+    image: quay.io/alampare/model-registry-storage-initializer:latest
+    env:
+    - name: MLMD_HOSTNAME
+      value: "modelregistry-sample.model-registry.svc.cluster.local"
+    - name: MLMD_PORT
+      value: "9090"
+    resources:
+      requests:
+        memory: 100Mi
+        cpu: 100m
+      limits:
+        memory: 1Gi
+        cpu: "1"
+  supportedUriFormats:
+    - prefix: model-registry://
