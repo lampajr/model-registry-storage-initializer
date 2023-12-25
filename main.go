@@ -1,22 +1,18 @@
 package main
 
 import (
-	"context"
-	"fmt"
 	"log"
 	"os"
-	"time"
 
 	"github.com/lampajr/model-registry-storage-initializer/pkg/storage"
-	"google.golang.org/grpc"
-	"google.golang.org/grpc/credentials/insecure"
+	"github.com/opendatahub-io/model-registry/pkg/openapi"
 )
 
 const (
-	mlmdHostEnv     = "MLMD_HOSTNAME"
-	mlmdPortEnv     = "MLMD_PORT"
-	mlmdHostDefault = "localhost"
-	mlmdPortDefault = "9090"
+	modelRegistryBaseUrlEnv     = "MODEL_REGISTRY_BASE_URL"
+	modelRegistrySchemeEnv      = "MODEL_REGISTRY_SCHEME"
+	modelRegistryBaseUrlDefault = "localhost:8080"
+	modelRegistrySchemeDefault  = "http"
 )
 
 func main() {
@@ -29,31 +25,20 @@ func main() {
 
 	log.Printf("Initializing, args: src_uri [%s] dest_path[ [%s]\n", sourceUri, destPath)
 
-	mlmdHost, ok := os.LookupEnv(mlmdHostEnv)
-	if !ok || mlmdHost == "" {
-		mlmdHost = mlmdHostDefault
-	}
-	mlmdPort, ok := os.LookupEnv(mlmdPortEnv)
-	if !ok || mlmdPort == "" {
-		mlmdPort = mlmdPortDefault
+	baseUrl, ok := os.LookupEnv(modelRegistryBaseUrlEnv)
+	if !ok || baseUrl == "" {
+		baseUrl = modelRegistryBaseUrlDefault
 	}
 
-	mlmdAddr := fmt.Sprintf("%s:%s", mlmdHost, mlmdPort)
-
-	ctxTimeout, cancel := context.WithTimeout(context.Background(), time.Second*30)
-	defer cancel()
-	conn, err := grpc.DialContext(
-		ctxTimeout,
-		mlmdAddr,
-		grpc.WithReturnConnectionError(),
-		grpc.WithBlock(),
-		grpc.WithTransportCredentials(insecure.NewCredentials()),
-	)
-	if err != nil {
-		log.Fatalf("error dialing connection to mlmd server %s: %v", mlmdAddr, err)
+	scheme, ok := os.LookupEnv(modelRegistrySchemeEnv)
+	if !ok || scheme == "" {
+		scheme = modelRegistrySchemeDefault
 	}
 
-	provider, err := storage.NewModelRegistryProvider(conn)
+	cfg := openapi.NewConfiguration()
+	cfg.Host = baseUrl
+	cfg.Scheme = scheme
+	provider, err := storage.NewModelRegistryProvider(cfg)
 	if err != nil {
 		log.Fatalf("Error initiliazing model registry provider: %v", err)
 	}

@@ -7,10 +7,8 @@ spec:
     name: storage-initializer
     image: quay.io/alampare/model-registry-storage-initializer:latest
     env:
-    - name: MLMD_HOSTNAME
-      value: "modelregistry-sample.model-registry.svc.cluster.local"
-    - name: MLMD_PORT
-      value: "9090"
+    - name: MR_BASE_URL
+      value: "modelregistry-sample.model-registry.svc.cluster.local:8080"
     resources:
       requests:
         memory: 100Mi

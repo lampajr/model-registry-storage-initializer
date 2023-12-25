@@ -2,9 +2,11 @@
 
 Welcome :wave:! 
 
+:heavy_exclamation_mark: This branch is a generalization of the [lampajr/model-registry-storage-initializer:odh-registry](https://github.com/lampajr/model-registry-storage-initializer/tree/odh-registry) branch which is tied up with the [opendatahub-io/model-registry](https://github.com/opendatahub-io/model-registry). Here, instead, you could deploy your own model registry as long as it is compatible with the [opendatahub OpenAPI spec](https://github.com/opendatahub-io/model-registry/blob/main/api/openapi/model-registry.yaml) :heavy_exclamation_mark:
+
 Here, you'll find an implementation of a Kserve custom storage initializer tailored for the `model-registry://` URI format. This functionality aligns seamlessly with the specifications outlined in the [CustomStorageContainer](https://kserve.github.io/website/latest/modelserving/storage/storagecontainers/) CRD.
 
-Our implementation is intricately connected with [opendatahub-io/model-registry](https://github.com/opendatahub-io/model-registry), with all interactions facilitated through the robust [Model Registry Go library](https://pkg.go.dev/github.com/opendatahub-io/model-registry). Explore the possibilities and enhance your model-serving experience with this powerful integration with Model Registry.
+This implementation is intended to work with any model registry service that exposes a REST interface compatible with the [Opendatahub OpenAPI spec](https://github.com/opendatahub-io/model-registry/blob/main/api/openapi/model-registry.yaml). Explore the possibilities and enhance your model-serving experience with this powerful integration with a generic Model Registry.
 
 ## Quickstart
 
@@ -48,7 +50,7 @@ In this tutorial, you will deploy an InferenceService with a predictor that will
 
 You will then send an inference request to your deployed model in order to get a prediction for the class of iris plant your request corresponds to.
 
-Since your model is being deployed as an InferenceService, not a raw Kubernetes Service, you just need to provide the storage location of the model using the `model-registry://` URI format and it gets some super powers out of the box 🚀.
+Since your model is being deployed as an InferenceService, not a raw Kubernetes Service, you just need to provide the storage location of the model using the `model-registry://` URI format and it gets some super powers out of the box.
 
 #### Index the `Model` into the registry
 
@@ -116,10 +118,10 @@ curl --silent -X 'POST' \
 Retrieve the model registry service and MLMD port:
 ```bash
 MODEL_REGISTRY_SERVICE=$(kubectl get svc -n model-registry --selector="component=model-registry" --output jsonpath='{.items[0].metadata.name}')
-MODEL_REGISTRY_GRPC_PORT=$(kubectl get svc -n model-registry --selector="component=model-registry" --output jsonpath='{.items[0].spec.ports[0].targetPort}')
+MODEL_REGISTRY_REST_PORT=$(kubectl get svc -n model-registry --selector="component=model-registry" --output jsonpath='{.items[0].spec.ports[1].targetPort}')
 ```
 
-Apply the cluster-scoped `CustomStorageContainer` CR to setup configure the `model registry storage initilizer` for `model-regsitry://` URI formats.
+Apply the cluster-scoped `CustomStorageContainer` CR to setup configure the `model registry storage initilizer` for `model-registry://` URI formats.
 
 ```bash
 kubectl apply -f - <<EOF
@@ -132,10 +134,10 @@ spec:
     name: storage-initializer
     image: quay.io/alampare/model-registry-storage-initializer:latest
     env:
-    - name: MLMD_HOSTNAME
-      value: "$MODEL_REGISTRY_SERVICE.model-registry.svc.cluster.local"
-    - name: MLMD_PORT
-      value: "$MODEL_REGISTRY_GRPC_PORT"
+    - name: MODEL_REGISTRY_BASE_URL
+      value: "$MODEL_REGISTRY_SERVICE.model-registry.svc.cluster.local:$MODEL_REGISTRY_REST_PORT"
+    - name: MODEL_REGISTRY_SCHEME
+      value: "http"
     resources:
       requests:
         memory: 100Mi

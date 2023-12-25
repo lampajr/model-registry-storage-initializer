@@ -1,30 +1,25 @@
 package storage
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"regexp"
 	"strings"
 
 	kserve "github.com/kserve/kserve/pkg/agent/storage"
-	"github.com/opendatahub-io/model-registry/pkg/api"
-	"github.com/opendatahub-io/model-registry/pkg/core"
 	"github.com/opendatahub-io/model-registry/pkg/openapi"
-	"google.golang.org/grpc"
 )
 
 const MR kserve.Protocol = "model-registry://"
 
 type ModelRegistryProvider struct {
-	Client    api.ModelRegistryApi
+	Client    *openapi.APIClient
 	Providers map[kserve.Protocol]kserve.Provider
 }
 
-func NewModelRegistryProvider(conn *grpc.ClientConn) (*ModelRegistryProvider, error) {
-	client, err := core.NewModelRegistryService(conn)
-	if err != nil {
-		return nil, err
-	}
+func NewModelRegistryProvider(cfg *openapi.Configuration) (*ModelRegistryProvider, error) {
+	client := openapi.NewAPIClient(cfg)
 
 	return &ModelRegistryProvider{
 		Client:    client,
@@ -53,7 +48,7 @@ func (p *ModelRegistryProvider) DownloadModel(modelDir string, modelName string,
 	}
 
 	// Fetch the registered model
-	model, err := p.Client.GetRegisteredModelByParams(&registeredModelName, nil)
+	model, _, err := p.Client.ModelRegistryServiceAPI.FindRegisteredModel(context.Background()).Name(registeredModelName).Execute()
 	if err != nil {
 		return err
 	}
@@ -61,15 +56,15 @@ func (p *ModelRegistryProvider) DownloadModel(modelDir string, modelName string,
 	// Fetch model version by name or latest if not specified
 	var version *openapi.ModelVersion
 	if versionName != nil {
-		version, err = p.Client.GetModelVersionByParams(versionName, model.Id, nil)
+		version, _, err = p.Client.ModelRegistryServiceAPI.FindModelVersion(context.Background()).Name(*versionName).ParentResourceID(*model.Id).Execute()
 		if err != nil {
 			return err
 		}
 	} else {
-		versions, err := p.Client.GetModelVersions(api.ListOptions{
-			OrderBy:   (*string)(openapi.ORDERBYFIELD_CREATE_TIME.Ptr()),
-			SortOrder: (*string)(openapi.SORTORDER_DESC.Ptr()),
-		}, model.Id)
+		versions, _, err := p.Client.ModelRegistryServiceAPI.GetRegisteredModelVersions(context.Background(), *model.Id).
+			OrderBy(openapi.ORDERBYFIELD_CREATE_TIME).
+			SortOrder(openapi.SORTORDER_DESC).
+			Execute()
 		if err != nil {
 			return err
 		}
@@ -80,18 +75,22 @@ func (p *ModelRegistryProvider) DownloadModel(modelDir string, modelName string,
 		version = &versions.Items[0]
 	}
 
-	artifacts, err := p.Client.GetModelArtifacts(api.ListOptions{
-		OrderBy:   (*string)(openapi.ORDERBYFIELD_CREATE_TIME.Ptr()),
-		SortOrder: (*string)(openapi.SORTORDER_DESC.Ptr()),
-	}, version.Id)
+	artifacts, _, err := p.Client.ModelRegistryServiceAPI.GetModelVersionArtifacts(context.Background(), *version.Id).
+		OrderBy(openapi.ORDERBYFIELD_CREATE_TIME).
+		SortOrder(openapi.SORTORDER_DESC).
+		Execute()
 	if err != nil {
 		return err
 	}
 
 	if artifacts.Size == 0 {
-		return fmt.Errorf("no versions associated to registered model %s", registeredModelName)
+		return fmt.Errorf("no artifacts associated to model version %s", *version.Id)
 	}
-	modelArtifact := &artifacts.Items[0]
+
+	modelArtifact := artifacts.Items[0].ModelArtifact
+	if modelArtifact == nil {
+		return fmt.Errorf("no model artifact found for model version %s", *version.Id)
+	}
 
 	// Call appropriate kserve provider based on the indexed model artifact URI
 	if modelArtifact.Uri == nil {

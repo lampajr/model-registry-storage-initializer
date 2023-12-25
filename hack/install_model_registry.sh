@@ -31,6 +31,9 @@ done
 kubectl apply -k "https://github.com/opendatahub-io/model-registry-operator.git/config/default?ref=main"
 
 # Install model registry CR and Postgres database
+if ! kubectl get namespace "$namespace" &> /dev/null; then
+   kubectl create namespace $namespace
+fi
 kubectl -n $namespace apply -k "https://github.com/opendatahub-io/model-registry-operator.git/config/samples?ref=main"
 
 # Wait for model registry deployment
@@ -39,5 +42,4 @@ while [ "${condition}" != "True" ]
 do
   sleep 5
   condition="`kubectl -n $namespace get mr modelregistry-sample --output=jsonpath='{.status.conditions[?(@.type=="Available")].status}'`"
-  echo "Registry Available=${condition}"
 done
