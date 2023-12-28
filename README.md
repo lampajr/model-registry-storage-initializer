@@ -130,7 +130,7 @@ metadata:
 spec:
   container:
     name: storage-initializer
-    image: quay.io/alampare/model-registry-storage-initializer:latest
+    image: quay.io/alampare/model-registry-storage-initializer:odh-registry
     env:
     - name: MLMD_HOSTNAME
       value: "$MODEL_REGISTRY_SERVICE.model-registry.svc.cluster.local"

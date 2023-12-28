@@ -1,4 +1,4 @@
-IMG ?= quay.io/${USER}/model-registry-storage-initializer:latest
+IMG ?= quay.io/${USER}/model-registry-storage-initializer:odh-registry
 
 .PHONY: help
 help: ## Display this help.
