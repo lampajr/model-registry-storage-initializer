@@ -8,6 +8,46 @@ Here, you'll find an implementation of a Kserve custom storage initializer tailo
 
 This implementation is intended to work with any model registry service that exposes a REST interface compatible with the [Opendatahub OpenAPI spec](https://github.com/opendatahub-io/model-registry/blob/main/api/openapi/model-registry.yaml). Explore the possibilities and enhance your model-serving experience with this powerful integration with a generic Model Registry.
 
+## Workflow
+
+The following diagram showcase the interactions among all participants/actors involved in the model deployment process using the proposed `Model Registry Storage Initializer`.
+
+<!-- 
+  Issue rendering on github while using create/destroy keywords, might be because Github
+  is using older Mermaid version. Ref https://github.com/mermaid-js/mermaid/issues/4388
+
+  create participant MD as Model Deployment (Pod)
+
+  create participant MRSI as Model Registry Storage Initializer
+  destroy MRSI
+-->
+
+```mermaid
+sequenceDiagram
+    actor U as User
+    participant MR as Model Registry
+    participant KC as KServe Controller
+    participant MD as Model Deployment (Pod)
+    participant MRSI as Model Registry Storage Initializer
+    U->>+MR: Register ML Model
+    MR-->>-U: Indexed Model
+    U->>U: Create InferenceService CR
+    Note right of U: The InferenceService should<br/>point to the model registry<br/>indexed model, e.g.,:<br/> model-registry://<model>/<version>
+    KC->>KC: React to InferenceService creation
+    KC->>+MD: Create Model Deployment
+    MD->>+MRSI: Initialization (Download Model)
+    MRSI->>MRSI: Parse URI
+    MRSI->>+MR: Fetch Model Metadata
+    MR-->>-MRSI: Model Metadata
+    Note over MR,MRSI: The main information that is fetched is the artifact URI which specifies the real model location, e.g.,: https://.. or s3://...
+    MRSI->>MRSI: Download Model
+    Note right of MRSI: The storage initializer will use<br/> the KServe default providers<br/> to download the model<br/> based on the artifact URI
+    MRSI-->>-MD: Downloaded Model
+    MD->>-MD: Deploy Model
+```
+
+The same diagram is also available as exported [image](./docs/flow_diagram.png).
+
 ## Quickstart
 
 Embark on your journey with this custom storage initializer by exploring a simple hello-world example. Learn how to seamlessly integrate and leverage the power of our tool in just a few steps.
