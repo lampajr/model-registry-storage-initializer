@@ -19,7 +19,7 @@ while getopts ":hn:" option; do
       h) # display Help
          Help
          exit;;
-      r) # override namespace
+      n) # override namespace
           namespace=$OPTARG;;
      \?) # Invalid option
          echo "Error: Invalid option"
