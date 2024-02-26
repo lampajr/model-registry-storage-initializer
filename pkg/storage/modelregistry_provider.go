@@ -48,25 +48,28 @@ func (p *ModelRegistryProvider) DownloadModel(modelDir string, modelName string,
 	}
 
 	// Fetch the registered model
+	log.Printf("Fetching RegisteredModel %v", registeredModelName)
 	model, _, err := p.Client.ModelRegistryServiceAPI.FindRegisteredModel(context.Background()).Name(registeredModelName).Execute()
 	if err != nil {
-		return err
+		return fmt.Errorf("error fetching registered model %v: %w", registeredModelName, err)
 	}
 
 	// Fetch model version by name or latest if not specified
 	var version *openapi.ModelVersion
 	if versionName != nil {
+		log.Printf("Fetching ModelVersion %v", *versionName)
 		version, _, err = p.Client.ModelRegistryServiceAPI.FindModelVersion(context.Background()).Name(*versionName).ParentResourceID(*model.Id).Execute()
 		if err != nil {
-			return err
+			return fmt.Errorf("error fetching model version %v: %w", versionName, err)
 		}
 	} else {
+		log.Printf("Fetching latest ModelVersion")
 		versions, _, err := p.Client.ModelRegistryServiceAPI.GetRegisteredModelVersions(context.Background(), *model.Id).
 			OrderBy(openapi.ORDERBYFIELD_CREATE_TIME).
 			SortOrder(openapi.SORTORDER_DESC).
 			Execute()
 		if err != nil {
-			return err
+			return fmt.Errorf("error fetching latest model version: %w", err)
 		}
 
 		if versions.Size == 0 {
@@ -75,12 +78,13 @@ func (p *ModelRegistryProvider) DownloadModel(modelDir string, modelName string,
 		version = &versions.Items[0]
 	}
 
+	log.Printf("Fetching latest ModelArtifact")
 	artifacts, _, err := p.Client.ModelRegistryServiceAPI.GetModelVersionArtifacts(context.Background(), *version.Id).
 		OrderBy(openapi.ORDERBYFIELD_CREATE_TIME).
 		SortOrder(openapi.SORTORDER_DESC).
 		Execute()
 	if err != nil {
-		return err
+		return fmt.Errorf("error fetching latest model artifact: %w", err)
 	}
 
 	if artifacts.Size == 0 {
@@ -99,12 +103,12 @@ func (p *ModelRegistryProvider) DownloadModel(modelDir string, modelName string,
 
 	protocol, err := extractProtocol(*modelArtifact.Uri)
 	if err != nil {
-		return err
+		return fmt.Errorf("error extracting protocol for %v: %w", *modelArtifact.Uri, err)
 	}
 
 	provider, err := kserve.GetProvider(p.Providers, protocol)
 	if err != nil {
-		return err
+		return fmt.Errorf("error getting provider for %v: %w", protocol, err)
 	}
 
 	modelName = registeredModelName
