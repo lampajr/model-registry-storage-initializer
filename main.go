@@ -4,8 +4,8 @@ import (
 	"log"
 	"os"
 
+	"github.com/kubeflow/model-registry/pkg/openapi"
 	"github.com/lampajr/model-registry-storage-initializer/pkg/storage"
-	"github.com/opendatahub-io/model-registry/pkg/openapi"
 )
 
 const (
