@@ -6,6 +6,20 @@ Here, you'll find an example implementation of a Kserve custom storage initializ
 
 This implementation is intended to work with any model registry service that exposes a REST interface compatible with the [Opendatahub OpenAPI spec](https://github.com/opendatahub-io/model-registry/blob/v0.1.1/api/openapi/model-registry.yaml). Explore the possibilities and enhance your model-serving experience with this powerful integration with a generic Model Registry.
 
+## Development
+
+Build container image:
+```bash
+make docker-build
+```
+
+By default the container image name is `quay.io/${USER}/model-registry-storage-initializer:latest` but it can be overridden providing the `IMG` env variable, e.g., `make IMG=quay.io/ORG/NAME:TAG docker-build`.
+
+Push the generated image:
+```bash
+make [IMG=..] docker-push
+```
+
 ## Workflow
 
 The following diagram showcase the interactions among all participants/actors involved in the model deployment process using the proposed `Model Registry Storage Initializer`.
