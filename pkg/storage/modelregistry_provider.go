@@ -8,7 +8,7 @@ import (
 	"strings"
 
 	kserve "github.com/kserve/kserve/pkg/agent/storage"
-	"github.com/opendatahub-io/model-registry/pkg/openapi"
+	"github.com/kubeflow/model-registry/pkg/openapi"
 )
 
 const MR kserve.Protocol = "model-registry://"

@@ -13,7 +13,7 @@ Help() {
   echo
 }
 
-namespace=model-registry
+namespace=kubeflow
 while getopts ":hn:" option; do
    case $option in
       h) # display Help
@@ -27,19 +27,13 @@ while getopts ":hn:" option; do
    esac
 done
 
-# Install model registry operator
-kubectl apply -k "https://github.com/opendatahub-io/model-registry-operator.git/config/default?ref=v0.1.1"
-
-# Install model registry CR and Postgres database
+# Create namespace if not already existing
 if ! kubectl get namespace "$namespace" &> /dev/null; then
    kubectl create namespace $namespace
 fi
-kubectl -n $namespace apply -k "https://github.com/opendatahub-io/model-registry-operator.git/config/samples/postgres?ref=v0.1.1"
+# Apply model-registry kustomize manifests
+kubectl -n $namespace apply -k "https://github.com/kubeflow/model-registry.git/manifests/kustomize/overlays/postgres?ref=main"
 
 # Wait for model registry deployment
-condition="false"
-while [ "${condition}" != "True" ]
-do
-  sleep 5
-  condition="`kubectl -n $namespace get mr modelregistry-sample --output=jsonpath='{.status.conditions[?(@.type=="Available")].status}'`"
-done
+modelregistry=$(kubectl get pod -n kubeflow --selector="component=model-registry-server" --output jsonpath='{.items[0].metadata.name}')
+kubectl wait --for=condition=Ready pod/$modelregistry -n $namespace --timeout=5m

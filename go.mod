@@ -4,7 +4,7 @@ go 1.20
 
 require (
 	github.com/kserve/kserve v0.11.2
-	github.com/opendatahub-io/model-registry v0.1.1
+	github.com/kubeflow/model-registry v0.0.0-20240226124958-ddbd6aedb9a2
 )
 
 require (
@@ -44,7 +44,7 @@ require (
 	google.golang.org/genproto v0.0.0-20231106174013-bbf56f31fb17 // indirect
 	google.golang.org/genproto/googleapis/api v0.0.0-20231106174013-bbf56f31fb17 // indirect
 	google.golang.org/genproto/googleapis/rpc v0.0.0-20231120223509-83a465c0220f // indirect
-	google.golang.org/grpc v1.61.0 // indirect
+	google.golang.org/grpc v1.61.1 // indirect
 	google.golang.org/protobuf v1.32.0 // indirect
 	gopkg.in/inf.v0 v0.9.1 // indirect
 	gopkg.in/yaml.v2 v2.4.0 // indirect

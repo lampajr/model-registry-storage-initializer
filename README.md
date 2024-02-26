@@ -4,7 +4,7 @@ Welcome :wave:!
 
 Here, you'll find an example implementation of a Kserve custom storage initializer tailored for the `model-registry://` URI format. This functionality aligns seamlessly with the specifications outlined in the [ClusterStorageContainer](https://kserve.github.io/website/latest/modelserving/storage/storagecontainers/) CRD.
 
-This implementation is intended to work with any model registry service that exposes a REST interface compatible with the [Opendatahub OpenAPI spec](https://github.com/opendatahub-io/model-registry/blob/v0.1.1/api/openapi/model-registry.yaml). Explore the possibilities and enhance your model-serving experience with this powerful integration with a generic Model Registry.
+This implementation is intended to work with any model registry service that exposes a REST interface compatible with the [kubeflow OpenAPI spec](https://github.com/kubeflow/model-registry/blob/main/api/openapi/model-registry.yaml). Explore the possibilities and enhance your model-serving experience with this powerful integration with a generic Model Registry.
 
 ## Development
 
@@ -93,7 +93,7 @@ curl -s "https://raw.githubusercontent.com/kserve/kserve/release-0.11/hack/quick
 4. Install *model registry* in the local cluster
 
 ```bash
-curl -s "https://raw.githubusercontent.com/lampajr/model-registry-storage-initializer/v0.0.1/hack/install_model_registry.sh" | bash
+curl -s "https://raw.githubusercontent.com/lampajr/model-registry-storage-initializer/main/hack/install_model_registry.sh" | bash
 ```
 
 ### First InferenceService
@@ -108,8 +108,7 @@ Since your model is being deployed as an InferenceService, not a raw Kubernetes 
 
 Apply `Port Forward` to the model registry service in order to being able to interact with it from the outside of the cluster.
 ```bash
-MODEL_REGISTRY_SERVICE=$(kubectl get svc -n model-registry --selector="component=model-registry" --output jsonpath='{.items[0].metadata.name}')
-kubectl port-forward --namespace model-registry svc/${MODEL_REGISTRY_SERVICE} 8080:8080
+kubectl port-forward --namespace kubeflow svc/model-registry-service 8080:8080
 ```
 And then:
 ```bash
@@ -169,8 +168,8 @@ curl --silent -X 'POST' \
 
 Retrieve the model registry service and MLMD port:
 ```bash
-MODEL_REGISTRY_SERVICE=$(kubectl get svc -n model-registry --selector="component=model-registry" --output jsonpath='{.items[0].metadata.name}')
-MODEL_REGISTRY_REST_PORT=$(kubectl get svc -n model-registry --selector="component=model-registry" --output jsonpath='{.items[0].spec.ports[1].targetPort}')
+MODEL_REGISTRY_SERVICE=model-registry-service
+MODEL_REGISTRY_REST_PORT=$(kubectl get svc/$MODEL_REGISTRY_SERVICE -n kubeflow --output jsonpath='{.spec.ports[0].targetPort}' )
 ```
 
 Apply the cluster-scoped `ClusterStorageContainer` CR to setup configure the `model registry storage initilizer` for `model-registry://` URI formats.
@@ -187,7 +186,7 @@ spec:
     image: quay.io/alampare/model-registry-storage-initializer:latest
     env:
     - name: MODEL_REGISTRY_BASE_URL
-      value: "$MODEL_REGISTRY_SERVICE.model-registry.svc.cluster.local:$MODEL_REGISTRY_REST_PORT"
+      value: "$MODEL_REGISTRY_SERVICE.kubeflow.svc.cluster.local:$MODEL_REGISTRY_REST_PORT"
     - name: MODEL_REGISTRY_SCHEME
       value: "http"
     resources:
