@@ -5,7 +5,7 @@ metadata:
 spec:
   container:
     name: storage-initializer
-    image: quay.io/alampare/model-registry-storage-initializer:latest
+    image: quay.io/alampare/model-registry-storage-initializer:v0.0.1
     env:
     - name: MR_BASE_URL
       value: "modelregistry-sample.model-registry.svc.cluster.local:8080"
