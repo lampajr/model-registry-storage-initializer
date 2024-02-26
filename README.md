@@ -2,11 +2,9 @@
 
 Welcome :wave:! 
 
-:heavy_exclamation_mark: This branch is a generalization of the [lampajr/model-registry-storage-initializer:odh-registry](https://github.com/lampajr/model-registry-storage-initializer/tree/odh-registry) branch which is tied up with the [opendatahub-io/model-registry](https://github.com/opendatahub-io/model-registry). Here, instead, you could deploy your own model registry as long as it is compatible with the [opendatahub OpenAPI spec](https://github.com/opendatahub-io/model-registry/blob/main/api/openapi/model-registry.yaml) :heavy_exclamation_mark:
+Here, you'll find an example implementation of a Kserve custom storage initializer tailored for the `model-registry://` URI format. This functionality aligns seamlessly with the specifications outlined in the [ClusterStorageContainer](https://kserve.github.io/website/latest/modelserving/storage/storagecontainers/) CRD.
 
-Here, you'll find an implementation of a Kserve custom storage initializer tailored for the `model-registry://` URI format. This functionality aligns seamlessly with the specifications outlined in the [CustomStorageContainer](https://kserve.github.io/website/latest/modelserving/storage/storagecontainers/) CRD.
-
-This implementation is intended to work with any model registry service that exposes a REST interface compatible with the [Opendatahub OpenAPI spec](https://github.com/opendatahub-io/model-registry/blob/main/api/openapi/model-registry.yaml). Explore the possibilities and enhance your model-serving experience with this powerful integration with a generic Model Registry.
+This implementation is intended to work with any model registry service that exposes a REST interface compatible with the [Opendatahub OpenAPI spec](https://github.com/opendatahub-io/model-registry/blob/v0.1.1/api/openapi/model-registry.yaml). Explore the possibilities and enhance your model-serving experience with this powerful integration with a generic Model Registry.
 
 ## Workflow
 
@@ -81,7 +79,7 @@ curl -s "https://raw.githubusercontent.com/kserve/kserve/release-0.11/hack/quick
 4. Install *model registry* in the local cluster
 
 ```bash
-curl -s "https://raw.githubusercontent.com/lampajr/model-registry-storage-initializer/main/hack/install_model_registry.sh" | bash
+curl -s "https://raw.githubusercontent.com/lampajr/model-registry-storage-initializer/v0.0.1/hack/install_model_registry.sh" | bash
 ```
 
 ### First InferenceService
@@ -153,7 +151,7 @@ curl --silent -X 'POST' \
 
 > *NOTE*: double check the provided IDs are the expected ones.
 
-#### Apply the `CustomStorageContainer` resource
+#### Apply the `ClusterStorageContainer` resource
 
 Retrieve the model registry service and MLMD port:
 ```bash
@@ -161,7 +159,7 @@ MODEL_REGISTRY_SERVICE=$(kubectl get svc -n model-registry --selector="component
 MODEL_REGISTRY_REST_PORT=$(kubectl get svc -n model-registry --selector="component=model-registry" --output jsonpath='{.items[0].spec.ports[1].targetPort}')
 ```
 
-Apply the cluster-scoped `CustomStorageContainer` CR to setup configure the `model registry storage initilizer` for `model-registry://` URI formats.
+Apply the cluster-scoped `ClusterStorageContainer` CR to setup configure the `model registry storage initilizer` for `model-registry://` URI formats.
 
 ```bash
 kubectl apply -f - <<EOF

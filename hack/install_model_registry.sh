@@ -28,13 +28,13 @@ while getopts ":hn:" option; do
 done
 
 # Install model registry operator
-kubectl apply -k "https://github.com/opendatahub-io/model-registry-operator.git/config/default?ref=main"
+kubectl apply -k "https://github.com/opendatahub-io/model-registry-operator.git/config/default?ref=v0.1.1"
 
 # Install model registry CR and Postgres database
 if ! kubectl get namespace "$namespace" &> /dev/null; then
    kubectl create namespace $namespace
 fi
-kubectl -n $namespace apply -k "https://github.com/opendatahub-io/model-registry-operator.git/config/samples?ref=main"
+kubectl -n $namespace apply -k "https://github.com/opendatahub-io/model-registry-operator.git/config/samples/postgres?ref=v0.1.1"
 
 # Wait for model registry deployment
 condition="false"
